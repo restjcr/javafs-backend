@@ -39,4 +39,14 @@ public class Patient {
     @Column(length = 55, nullable = false)
     private String email;
 
+    /*@Transient
+    private String fullName;
+
+    public String getFullName() {
+        return firstName + lastName;
+    }*/
+
+    /*public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }*/
 }
