@@ -8,6 +8,10 @@ import com.mitocode.service.impl.PatientServiceImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+//import org.springframework.hateoas.EntityModel;
+//import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -18,6 +22,10 @@ import java.util.stream.Collectors;
 
 import static org.springframework.http.HttpStatus.*;
 
+//import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+//import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
+
+
 @RestController
 @RequestMapping("/patients")
 @RequiredArgsConstructor
@@ -25,6 +33,8 @@ public class PatientController {
 
     //@Autowired
     private final PatientServiceImpl service;// = new PatientService();
+
+    @Qualifier("defaultMapper")
     private final ModelMapper mapper;
 
     @GetMapping
@@ -47,10 +57,10 @@ public class PatientController {
     public ResponseEntity<PatientDTO> findById(@PathVariable("id") Integer id){
         Patient obj = service.findById(id);
 
-        if(obj == null){
+        /*if(obj == null){
             throw new ModelNotFoundException("ID NOT FOUND" + id);
             //throw new NewModelNotFoundException("ID NOT FOUND " + id);
-        }
+        }*/
 
         return new ResponseEntity<>(this.convertToDto(obj), OK);
     }
@@ -68,23 +78,36 @@ public class PatientController {
         return ResponseEntity.created(location).build();
     }
 
-    @PutMapping//(consumes = "", produces = "")
-    public ResponseEntity<PatientDTO> update(@Valid @RequestBody PatientDTO dto){
-        Patient obj = service.update(convertToEntity(dto));
+    @PutMapping("/{id}")//(consumes = "", produces = "")
+    public ResponseEntity<PatientDTO> update(@PathVariable("id") Integer id, @Valid @RequestBody PatientDTO dto){
+        dto.setIdPatient(id);
+        Patient obj = service.update(convertToEntity(dto), id);
         return new ResponseEntity<>(convertToDto(obj), OK);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable("id") Integer id){
-        Patient obj = service.findById(id);
+        //Patient obj = service.findById(id);
 
-        if(obj == null){
+        /*if(obj == null){
             //throw new ModelNotFoundException("ID NOT FOUND " + id);
             throw new NewModelNotFoundException("ID NOT FOUND " + id);
-        }
+        }*/
         service.delete(id);
         return new ResponseEntity<>(NO_CONTENT);
     }
+
+    //@ResponseStatus(HttpStatus.NOT_FOUND)
+    /*@GetMapping("/hateoas/{id}")
+    public EntityModel<PatientDTO> findByIdHateoas(@PathVariable("id") Integer id){
+        EntityModel<PatientDTO> resource = EntityModel.of(this.convertToDto(service.findById(id)));
+        WebMvcLinkBuilder link1 = linkTo(methodOn(this.getClass()).findById(id));
+        WebMvcLinkBuilder link2 = linkTo(methodOn(LanguageController.class).changeLocale("EN"));
+        resource.add(link1.withRel("patient-info1"));
+        resource.add(link2.withRel("language-info"));
+
+        return resource;
+    }*/
 
     private PatientDTO convertToDto(Patient obj){
         return mapper.map(obj, PatientDTO.class);
